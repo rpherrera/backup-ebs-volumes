@@ -11,5 +11,4 @@ WORKDIR /backup-ebs-volumes
 COPY backup-ebs-volumes.py /backup-ebs-volumes/backup-ebs-volumes.py
 COPY ebs-snapshot-janitor.py /backup-ebs-volumes/ebs-snapshot-janitor.py
 
-ENTRYPOINT ["python"]
-CMD ["backup-ebs-volumes.py"]
+CMD ["python", "backup-ebs-volumes.py"]
