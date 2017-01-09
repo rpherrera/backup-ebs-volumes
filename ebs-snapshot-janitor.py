@@ -1,6 +1,9 @@
 #!/usr/local/bin/python
 # -*- coding: utf-8 -*-
 
+# This function looks at *all* snapshots that have a "DeleteOn" tag containing
+# the current day formatted as YYYY-MM-DD. This function should be run at least
+# daily.
 #
 # Taken from:
 # https://serverlesscode.com/post/lambda-schedule-ebs-snapshot-backups-2/
@@ -9,30 +12,11 @@
 import boto3
 import re
 import datetime
+import os
 
 ec = boto3.client('ec2')
 iam = boto3.client('iam')
-
-"""
-This function looks at *all* snapshots that have a "DeleteOn" tag containing
-the current day formatted as YYYY-MM-DD. This function should be run at least
-daily.
-"""
-
-account_ids = list()
-try:
-    """
-    You can replace this try/except by filling in `account_ids` yourself.
-    Get your account ID with:
-    > import boto3
-    > iam = boto3.client('iam')
-    > print iam.get_user()['User']['Arn'].split(':')[4]
-    """
-    iam.get_user()
-except Exception as e:
-    # use the exception message to get the account ID the function executes under
-    account_ids.append(re.search(r'(arn:aws:sts::)([0-9]+)', str(e)).groups()[1])
-
+account_ids = os.environ['AWS_ACCOUNT_IDS'].split(',')
 
 delete_on = datetime.date.today().strftime('%Y-%m-%d')
 filters = [
@@ -40,7 +24,6 @@ filters = [
     {'Name': 'tag-value', 'Values': [delete_on]},
 ]
 snapshot_response = ec.describe_snapshots(OwnerIds=account_ids, Filters=filters)
-
 
 for snap in snapshot_response['Snapshots']:
     print "Deleting snapshot %s" % snap['SnapshotId']
